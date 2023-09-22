@@ -3,6 +3,7 @@ module github.com/wilianto/planning-poker-backend
 go 1.19
 
 require (
+	entgo.io/ent v0.12.4 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/gofiber/fiber/v2 v2.49.2 // indirect
 	github.com/google/uuid v1.3.1 // indirect
