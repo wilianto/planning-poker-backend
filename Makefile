@@ -13,3 +13,6 @@ clean:
 	docker compose --env-file .env down -v
 	rm -rf ./model/schema/ent
 	go clean
+
+generate-doc:
+	swag init -q false

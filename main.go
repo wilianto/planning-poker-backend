@@ -8,13 +8,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
+
 	"github.com/wilianto/planning-poker-backend/model/schema/ent"
 	"github.com/wilianto/planning-poker-backend/room"
 
 	_ "github.com/lib/pq"
+	_ "github.com/wilianto/planning-poker-backend/docs"
 )
 
+// @title Planning Poker API
+// @version v1
+// @description This is a planning poker API server.
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -37,6 +46,7 @@ func main() {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON("OK")
 	})
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	api := app.Group("/api/v1")
 	initRoomEndpoints(api, client)
@@ -69,6 +79,6 @@ func initDB() (*ent.Client, error) {
 func initRoomEndpoints(app fiber.Router, client *ent.Client) {
 	service := room.NewService(client)
 	roomHttp := room.NewHttpTransport(service)
-	room := app.Group("/room")
+	room := app.Group("/rooms")
 	room.Post("/", roomHttp.Create)
 }

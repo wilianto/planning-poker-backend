@@ -1,0 +1,65 @@
+definitions:
+  common.HttpErrorReponse:
+    properties:
+      message:
+        type: string
+    type: object
+  room.CreateRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  room.CreateResponse:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a planning poker API server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Planning Poker API
+  version: v1
+paths:
+  /api/v1/rooms:
+    post:
+      consumes:
+      - application/json
+      description: Create a new room with name
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/room.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/room.CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.HttpErrorReponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.HttpErrorReponse'
+      summary: Create a new room
+      tags:
+      - room
+swagger: "2.0"

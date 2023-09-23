@@ -19,7 +19,7 @@ func NewService(client *ent.Client) *Service {
 
 func (s *Service) Create(ctx context.Context, name string) (*ent.Room, error) {
 	defaultConfig := map[string]interface{}{
-		"options": []string{"0", "1/2", "1", "2", "3", "5", "8", "13", "21", "?"},
+		"options": []string{"0", "0.5", "1", "2", "3", "5", "8", "13", "21", "?"},
 	}
 	room, err := s.client.Room.Create().
 		SetName(name).
