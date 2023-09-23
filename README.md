@@ -2,7 +2,19 @@
 Planning poker tool
 
 ## Local setup
+
+### Dependency
+- golang 1.19
+- make
+- docker
+
+### Run app
 ```bash
-cp .env.example .env
-docker compose --env-file .env up -d
+make run
+```
+
+
+### Clean up
+```bash
+make clean
 ```
