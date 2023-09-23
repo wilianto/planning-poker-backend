@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/wilianto/planning-poker-backend/model/schema/ent"
+	"github.com/wilianto/planning-poker-backend/room"
 
 	_ "github.com/lib/pq"
 )
@@ -27,7 +28,9 @@ func main() {
 	defer client.Close()
 
 	app := fiber.New()
-	app.Use(logger.New(logger.ConfigDefault))
+	app.Use(logger.New(logger.Config{
+		Format: "${time} ${method} ${path} - ${ip} - ${status} - ${latency}\n",
+	}))
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON("Hello, World!")
 	})
@@ -36,29 +39,7 @@ func main() {
 	})
 
 	api := app.Group("/api/v1")
-	room := api.Group("/room")
-
-	room.Post("/", func(c *fiber.Ctx) error {
-		var req struct {
-			Name string `json:"name"`
-		}
-
-		if err := c.BodyParser(&req); err != nil {
-			log.Infof("failed parsing request body", "error", err)
-			return c.Status(fiber.StatusBadRequest).JSON(err)
-		}
-
-		room, err := client.Room.Create().
-			SetName(req.Name).
-			SetConfig(map[string]interface{}{}).
-			Save(c.Context())
-
-		if err != nil {
-			log.Errorw("failed creating room", "error", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(err)
-		}
-		return c.Status(fiber.StatusCreated).JSON(room)
-	})
+	initRoomEndpoints(api, client)
 
 	appPort := os.Getenv("APP_PORT")
 	app.Listen(fmt.Sprintf(":%s", appPort))
@@ -83,4 +64,11 @@ func initDB() (*ent.Client, error) {
 	}
 
 	return client, nil
+}
+
+func initRoomEndpoints(app fiber.Router, client *ent.Client) {
+	service := room.NewService(client)
+	roomHttp := room.NewHttpTransport(service)
+	room := app.Group("/room")
+	room.Post("/", roomHttp.Create)
 }
