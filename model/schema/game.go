@@ -22,13 +22,15 @@ func (Game) Fields() []ent.Field {
 		field.Time("updated_at").Default(time.Now),
 		field.Time("started_at").Optional().Nillable(),
 		field.Time("revealed_at").Optional().Nillable(),
+
+		field.UUID("room_id", uuid.UUID{}),
 	}
 }
 
 // Edges of the Game.
 func (Game) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("room", Room.Type).Ref("games").Required(),
+		edge.From("room", Room.Type).Ref("games").Field("room_id").Required().Unique(),
 		edge.To("cards", Card.Type),
 	}
 }

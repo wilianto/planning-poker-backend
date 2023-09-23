@@ -21,13 +21,16 @@ func (Card) Fields() []ent.Field {
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now),
 		field.String("value").MaxLen(10),
+
+		field.UUID("player_id", uuid.UUID{}),
+		field.UUID("game_id", uuid.UUID{}),
 	}
 }
 
 // Edges of the Card.
 func (Card) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("player", Player.Type).Ref("cards").Required(),
-		edge.From("game", Game.Type).Ref("cards").Required(),
+		edge.From("player", Player.Type).Ref("cards").Field("player_id").Required().Unique(),
+		edge.From("game", Game.Type).Ref("cards").Field("game_id").Required().Unique(),
 	}
 }
