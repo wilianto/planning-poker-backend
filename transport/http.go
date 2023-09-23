@@ -29,5 +29,6 @@ func HttpRouting(
 	apiV1 := app.Group("/api/v1")
 	apiV1.Route("/rooms", func(r fiber.Router) {
 		r.Post("/", roomHttp.Create)
+		r.Post("/:id/join", roomHttp.Join)
 	})
 }

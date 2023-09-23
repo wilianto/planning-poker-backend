@@ -64,3 +64,39 @@ func (h *HttpTransport) Create(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
 }
+
+type JoinRequest struct {
+	Name string `json:"name"`
+}
+
+type JoinResponse struct {
+	PlayerID uuid.UUID `json:"player_id"`
+	RoomID   uuid.UUID `json:"room_id"`
+}
+
+func (h *HttpTransport) Join(c *fiber.Ctx) error {
+	id := c.Params("id")
+	roomID, err := uuid.Parse(id)
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(common.HttpErrorReponse{Message: "room not found"})
+	}
+
+	var req JoinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(common.HttpErrorReponse{Message: err.Error()})
+	}
+
+	player, err := h.roomService.Join(c.Context(), roomID, "player")
+	if err != nil {
+		log.Errorw("failed joining room", "error", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(common.HttpErrorReponse{Message: err.Error()})
+	}
+
+	resp := JoinResponse{
+		PlayerID: player.ID,
+		RoomID:   player.RoomID,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+}

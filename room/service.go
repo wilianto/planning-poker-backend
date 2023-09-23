@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/wilianto/planning-poker-backend/model/schema/ent"
 )
 
@@ -31,4 +32,22 @@ func (s *Service) Create(ctx context.Context, name string) (*ent.Room, error) {
 	}
 
 	return room, nil
+}
+
+func (s *Service) Join(ctx context.Context, roomID uuid.UUID, playerName string) (*ent.Player, error) {
+	room, err := s.client.Room.Get(ctx, roomID)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting room: %w", err)
+	}
+
+	player, err := s.client.Player.Create().
+		SetName(playerName).
+		SetRoomID(room.ID).
+		Save(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed creating player: %w", err)
+	}
+
+	return player, nil
 }
