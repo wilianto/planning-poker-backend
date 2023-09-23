@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -10,8 +9,8 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/wilianto/planning-poker-backend/common"
-	"github.com/wilianto/planning-poker-backend/http"
 	"github.com/wilianto/planning-poker-backend/room"
+	"github.com/wilianto/planning-poker-backend/transport"
 
 	_ "github.com/lib/pq"
 	_ "github.com/wilianto/planning-poker-backend/docs"
@@ -38,10 +37,7 @@ func main() {
 	app := fiber.New()
 	roomService := room.NewService(client)
 
-	http.Routing(app, roomService)
-
-	data, _ := json.MarshalIndent(app.GetRoutes(), "", " ")
-	fmt.Println(string(data))
+	transport.HttpRouting(app, roomService)
 
 	appPort := os.Getenv("APP_PORT")
 	app.Listen(fmt.Sprintf(":%s", appPort))

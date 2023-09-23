@@ -1,4 +1,4 @@
-package http
+package transport
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -8,7 +8,7 @@ import (
 	"github.com/wilianto/planning-poker-backend/room"
 )
 
-func Routing(
+func HttpRouting(
 	app *fiber.App,
 	roomService *room.Service,
 ) {

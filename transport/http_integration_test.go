@@ -1,4 +1,4 @@
-package room_test
+package transport_test
 
 import (
 	"context"
@@ -16,20 +16,23 @@ import (
 	"github.com/wilianto/planning-poker-backend/common"
 	"github.com/wilianto/planning-poker-backend/model/schema/ent"
 	"github.com/wilianto/planning-poker-backend/room"
+	"github.com/wilianto/planning-poker-backend/transport"
 
 	_ "github.com/lib/pq"
 )
 
-type httpTransportSuite struct {
+type IntegrationTestSuite struct {
 	suite.Suite
-	client *ent.Client
+	app         *fiber.App
+	client      *ent.Client
+	roomService *room.Service
 }
 
 func TestHttpTransportSuite(t *testing.T) {
-	suite.Run(t, new(httpTransportSuite))
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s *httpTransportSuite) SetupSuite() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	// TODO: init from main app
 	err := godotenv.Load("../.env")
 	require.NoError(s.T(), err)
@@ -37,23 +40,29 @@ func (s *httpTransportSuite) SetupSuite() {
 	client, err := common.InitTestDB()
 	require.NoError(s.T(), err)
 	s.client = client
+
+	s.roomService = room.NewService(client)
+
+	s.app = fiber.New()
+	transport.HttpRouting(s.app, s.roomService)
 }
 
-func (s *httpTransportSuite) TearDownSuite() {
+func (s *IntegrationTestSuite) TearDownSuite() {
+	// clean up DB
 	s.client.Room.Delete().ExecX(context.Background())
+	s.client.Game.Delete().ExecX(context.Background())
+	s.client.Player.Delete().ExecX(context.Background())
+	s.client.Card.Delete().ExecX(context.Background())
+
 	s.client.Close()
 }
 
-func (s *httpTransportSuite) TestCreate() {
-	// TODO: init from main app
-	app := fiber.New()
-	room.InitHttpEndpoints(app, s.client)
-
+func (s *IntegrationTestSuite) TestCreate() {
 	reqBody := `{"name": "room 1"}`
-	req := httptest.NewRequest(http.MethodPost, "/rooms", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/rooms", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := app.Test(req)
+	resp, err := s.app.Test(req)
 	require.NoError(s.T(), err)
 	require.Equal(s.T(), fiber.StatusCreated, resp.StatusCode)
 
