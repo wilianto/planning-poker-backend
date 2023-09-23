@@ -9,25 +9,25 @@ import (
 	"github.com/google/uuid"
 )
 
-// Card holds the schema definition for the Card entity.
-type Card struct {
+// Player holds the schema definition for the Player entity.
+type Player struct {
 	ent.Schema
 }
 
-// Fields of the Card.
-func (Card) Fields() []ent.Field {
+// Fields of the Player.
+func (Player) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now),
-		field.String("value").MaxLen(10),
+		field.String("name").MaxLen(60).NotEmpty(),
 	}
 }
 
-// Edges of the Card.
-func (Card) Edges() []ent.Edge {
+// Edges of the Player.
+func (Player) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("player", Player.Type).Ref("cards").Required(),
-		edge.From("game", Game.Type).Ref("cards").Required(),
+		edge.From("room", Room.Type).Ref("players").Required(),
+		edge.To("cards", Card.Type),
 	}
 }
