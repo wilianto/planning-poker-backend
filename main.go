@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/wilianto/planning-poker-backend/model/schema/ent"
 
@@ -19,6 +20,51 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
+	client, err := initDB()
+	if err != nil {
+		log.Fatalf("failed initializing ent: %v", err)
+	}
+	defer client.Close()
+
+	app := fiber.New()
+	app.Use(logger.New(logger.ConfigDefault))
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON("Hello, World!")
+	})
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON("OK")
+	})
+
+	api := app.Group("/api/v1")
+	room := api.Group("/room")
+
+	room.Post("/", func(c *fiber.Ctx) error {
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		if err := c.BodyParser(&req); err != nil {
+			log.Infof("failed parsing request body", "error", err)
+			return c.Status(fiber.StatusBadRequest).JSON(err)
+		}
+
+		room, err := client.Room.Create().
+			SetName(req.Name).
+			SetConfig(map[string]interface{}{}).
+			Save(c.Context())
+
+		if err != nil {
+			log.Errorw("failed creating room", "error", err)
+			return c.Status(fiber.StatusInternalServerError).JSON(err)
+		}
+		return c.Status(fiber.StatusCreated).JSON(room)
+	})
+
+	appPort := os.Getenv("APP_PORT")
+	app.Listen(fmt.Sprintf(":%s", appPort))
+}
+
+func initDB() (*ent.Client, error) {
 	dataSourceName := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("POSTGRES_HOST"),
@@ -29,19 +75,12 @@ func main() {
 	)
 	client, err := ent.Open("postgres", dataSourceName)
 	if err != nil {
-		log.Fatalf("failed opening connection to postgres: %v", err)
+		return nil, fmt.Errorf("failed opening connection to postgres: %w", err)
 	}
-	defer client.Close()
 
 	if err = client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+		return nil, fmt.Errorf("failed creating schema resources: %w", err)
 	}
 
-	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
-
-	appPort := os.Getenv("APP_PORT")
-	app.Listen(fmt.Sprintf(":%s", appPort))
+	return client, nil
 }
