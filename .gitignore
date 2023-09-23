@@ -22,3 +22,5 @@ go.work
 
 # generated ent schema
 model/schema/ent
+
+*.env
